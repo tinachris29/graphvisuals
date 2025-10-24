@@ -1,0 +1,16 @@
+{
+    "Name": "Christina's App Data",
+    "top_apps": ["TikTok", "YouTube", "Safari", "Messages", "Instagram", "Google Drive", "All in Hole"],
+    "average_screen_time":
+        {
+            "TikTok": 5,
+            "YouTube": 2,
+            "Safari": 2,
+            "Messages": 2,
+            "Instagram": 1.5,
+            "Google Drive": 1,
+            "All in Hole": 0.5
+        },
+        
+         "total_hours":14
+}
