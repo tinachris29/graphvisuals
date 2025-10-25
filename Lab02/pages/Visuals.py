@@ -5,6 +5,11 @@ import streamlit as st
 import pandas as pd
 import json # The 'json' module is needed to work with JSON files.
 import os   # The 'os' module helps with file system operations.
+from pathlib import Path
+
+APP_ROOT = Path(__file__).resolve().parents[1]
+CSV_PATH = APP_ROOT / "data.csv"
+JSON_PATH = APP_ROOT / "data.json"
 
 
 # PAGE CONFIGURATION
@@ -33,9 +38,9 @@ st.header("Input Data")
 
 csv_df, json_data, json_df = None, None, None
 
-if os.path.exists("data.csv") and os.path.getsize("data.csv") > 0:
+if CSV_PATH.exists() and CSV_PATH.stat().st_size > 0:
     try:
-        csv_df = pd.read_csv("data.csv")
+        csv_df = pd.read_csv(CSV_PATH)
         csv_df.columns = [c.strip() for c in csv_df.columns]
         if not {"Category", "Value"}.issubset(set(csv_df.columns)):
             st.error("'data.csv' must have columns: Category, Value")
@@ -48,9 +53,9 @@ if os.path.exists("data.csv") and os.path.getsize("data.csv") > 0:
 else:
     st.warning("'data.csv' is missing or empty.")
 
-if os.path.exists("data.json") and os.path.getsize("data.json") > 0:
+if JSON_PATH.exists() and JSON_PATH.stat().st_size > 0:
     try:
-        f = open("data.json", "r")
+        f = open(JSON_PATH, "r", encoding="utf-8")
         json_data = json.load(f)
         f.close()
         
@@ -62,6 +67,11 @@ if os.path.exists("data.json") and os.path.getsize("data.json") > 0:
             st.error("'data.json' must include keys: 'Apps' and 'Hours'.")
     except Exception as e:
         st.error(f"Error reading data.json: {e}")
+    finally:
+        try:
+            f.close()
+        except:
+            pass
 else:
     st.warning("'data.json' is missing or empty.")
 
@@ -80,13 +90,14 @@ st.caption("Description: a Static Bar Graph plotting data from JSON. Christina's
 # - Create a static graph (e.g., bar chart, line chart) using st.bar_chart() or st.line_chart().
 # - Use data from either the CSV or JSON file.
 # - Write a description explaining what the graph shows.
-if not (os.path.exists("data.json") and os.path.getsize("data.json")) > 0:
+if not (JSON_PATH.exists() and JSON_PATH.stat().st_size > 0):
     st.info("JSON not available.")
 else:
     f = None
     try:
-        f = open("data.json", "r")
+        f = open(JSON_PATH, "r", encoding="utf-8")
         data = json.load(f)
+        f.close()
 
         if "average_screen_time" not in data or not isinstance(data["average_screen_time"], dict):
             st.error("'data.json' must include an 'average_screen_time' dictionary.")
@@ -96,15 +107,9 @@ else:
 
             if "top_apps" in data and isinstance(data["top_apps"], list):
                 df["App"] = pd.Categorical(df["App"], categories=data["top_apps"], ordered = True)
-                df = pd.DataFrame(list(avg.items()), columns = ["App", "Hours"])
-
-                if "top_apps" in data and isinstance(data["top_apps"], list):
-                    df["App"] = pd.Categorical(df["App"], categories = data["top_apps"], ordered = True)
-                    df = df.sort_values("App")
-
-                    st.bar_chart(df.set_index("App")["Hours"])  #new
+                df = df.sort_values("App")
+                st.bar_chart(df.set_index("App")["Hours"])        #new
                 
-
     except Exception as e:
         st.error(f"Error reading or parsing data.json: {e}")
     finally:
